@@ -1,10 +1,22 @@
 from aiogram import Bot, Dispatcher, executor, types
-from keyboards import register_inkb, to_main_menu_inkb, main_menu_inkb, \
-    close_club_inkb, consultation_inkb, question_inkb
+from keyboards import *
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher.filters.state import State, StatesGroup
+from database import *
+
+
+class MyDialog(StatesGroup):
+    answer = State()
+    isu_num = State()
+    close_club = State()
+
 
 API_TOKEN = '6158582931:AAFa5tddFa8126OBf8Pkco9WobMvjk2v0ho'
 bot = Bot(token=API_TOKEN)
-dp = Dispatcher(bot)
+storage = MemoryStorage()
+dp = Dispatcher(bot, storage=storage)
+
 
 @dp.message_handler(commands=['start'])
 async def register(message: types.Message):
@@ -12,11 +24,37 @@ async def register(message: types.Message):
     await message.answer('Привет! Это тг бот клубной системы ИТМО. Чтобы начать позьзоваться им, пройди регу',
                          reply_markup=register_inkb)
 
+
 @dp.callback_query_handler(text='register')
 async def to_main_menu(callback: types.CallbackQuery):
     await callback.message.delete_reply_markup()
-    await callback.message.edit_text('Вы удачно прошли регу',
-                                     reply_markup=to_main_menu_inkb)
+    await callback.message.answer('Введите ваш номер ИСУ')
+    await MyDialog.isu_num.set()
+
+
+@dp.message_handler(state=MyDialog.isu_num)
+async def process_message(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['text'] = message.text
+        user_message = data['text']
+
+        await MyDialog.answer.set()
+
+    await state.finish()
+    if message.from_user.id == 1067036017:
+        role_client = 'admin'
+    else:
+        role_client = 'member'
+
+    register_db(message.from_user.id, user_message, role_client)
+
+    if role_client == "admin":
+        await message.answer('Вы удачно прошли регу',
+                                     reply_markup=to_main_menu_admin_inkb)
+    else:
+        await message.answer('Вы удачно прошли регу',
+                                reply_markup=to_main_menu_inkb)
+
 
 @dp.callback_query_handler(text='to_main_menu')
 async def main_menu(callback: types.CallbackQuery):
@@ -24,59 +62,20 @@ async def main_menu(callback: types.CallbackQuery):
     await callback.message.edit_text('Чем вам помочь?',
                                      reply_markup=main_menu_inkb)
 
-@dp.callback_query_handler(text='close_club')
-async def close_club(callback: types.CallbackQuery):
-    await callback.message.delete_reply_markup()
-    await callback.message.edit_text('Почему вы хотите закрыть клуб?',
-                                     reply_markup=close_club_inkb)
 
-@dp.callback_query_handler(text='reason_1')
-async def reason_1(callback: types.CallbackQuery):
+@dp.callback_query_handler(text='to_main_menu_admin')
+async def main_menu(callback: types.CallbackQuery):
     await callback.message.delete_reply_markup()
-    await callback.message.edit_text('Ваш клуб скоро будет закрыт',
-                                     reply_markup=to_main_menu_inkb)
+    await callback.message.edit_text('Чем вам помочь?',
+                                     reply_markup=admin_main_menu_inkb)
 
-@dp.callback_query_handler(text='reason_2')
-async def reason_2(callback: types.CallbackQuery):
-    await callback.message.delete_reply_markup()
-    await callback.message.edit_text('Ваш клуб скоро будет закрыт',
-                                     reply_markup=to_main_menu_inkb)
-
-@dp.callback_query_handler(text='reason_other')
-async def reason_other(callback: types.CallbackQuery):
-    await callback.message.delete_reply_markup()
-    await callback.message.edit_text('Опишите, почемы вы хотите закрыть клуб',
-                                     reply_markup=to_main_menu_inkb)
-
-@dp.callback_query_handler(text='сhange_lead')
-async def сhange_lead(callback: types.CallbackQuery):
-    await callback.message.delete_reply_markup()
-    await callback.message.edit_text('Тут собираем данные о новом руководе',
-                                     reply_markup=to_main_menu_inkb)
-
-@dp.callback_query_handler(text='consutation')
-async def consutation(callback: types.CallbackQuery):
-    await callback.message.delete_reply_markup()
-    await callback.message.edit_text('Тут собираем данные о новом руководе',
-                                     reply_markup=consultation_inkb)
-
-@dp.callback_query_handler(text='change_logo')
-async def change_logo(callback: types.CallbackQuery):
-    await callback.message.delete_reply_markup()
-    await callback.message.edit_text('Тут просим картинку',
-                                     reply_markup=to_main_menu_inkb)
-
-@dp.callback_query_handler(text='change_back')
-async def сhange_back(callback: types.CallbackQuery):
-    await callback.message.delete_reply_markup()
-    await callback.message.edit_text('Тут просим картинку',
-                                     reply_markup=to_main_menu_inkb)
 
 @dp.callback_query_handler(text='question')
 async def question(callback: types.CallbackQuery):
     await callback.message.delete_reply_markup()
-    await callback.message.edit_text('тут собраны самые популярные вопросы, вы можете почитать ответы на них или заать свой вопрос',
+    await callback.message.edit_text('Тут собраны самые популярные вопросы, вы можете почитать ответы на них или заать свой вопрос',
                                      reply_markup=question_inkb)
+
 
 @dp.callback_query_handler(text='question_1')
 async def question_1(callback: types.CallbackQuery):
@@ -84,17 +83,81 @@ async def question_1(callback: types.CallbackQuery):
     await callback.message.edit_text('Ответ 1',
                                      reply_markup=to_main_menu_inkb)
 
+
 @dp.callback_query_handler(text='question_2')
 async def question_2(callback: types.CallbackQuery):
     await callback.message.delete_reply_markup()
     await callback.message.edit_text('Ответ 2',
                                      reply_markup=to_main_menu_inkb)
 
+
 @dp.callback_query_handler(text='own_question')
 async def question_own(callback: types.CallbackQuery):
     await callback.message.delete_reply_markup()
     await callback.message.edit_text('Напишите свой вопрос',
                                      reply_markup=to_main_menu_inkb)
+
+
+
+@dp.callback_query_handler(text='admin_change_lead')
+async def question_own(callback: types.CallbackQuery):
+    await callback.message.delete_reply_markup()
+    await callback.message.edit_text('Введите информацию о смене руководителя в одну строчку в виде:\n*Номер ИСУ старого руководителя* '
+                                     '*Номер ИСУ нового руководителя*')
+    await MyDialog.answer.set()
+
+
+@dp.message_handler(state=MyDialog.answer)
+async def process_message(message: types.Message, state: FSMContext):
+
+    async with state.proxy() as data:
+        data['text'] = message.text
+        user_message = data['text']
+
+        old_isu, new_isu = map(int, user_message.split())
+
+        current_id_club, ans1 = get_id_club(old_isu)
+
+        ans2 = change_lead_club(new_isu, current_id_club)
+
+        await MyDialog.answer.set()
+
+        if ans1 and ans2:
+            await message.answer('Руководитель успешно изменён!')
+        else:
+            await message.answer('Неверные номера ИСУ!')
+
+        await message.answer('Чем вам помочь?',
+                             reply_markup=admin_main_menu_inkb)
+    await state.finish()
+
+
+@dp.callback_query_handler(text='admin_close_club')
+async def question_own(callback: types.CallbackQuery):
+    await callback.message.delete_reply_markup()
+    await callback.message.edit_text('Введите название клуба в одну строчку')
+    await MyDialog.close_club.set()
+
+
+@dp.message_handler(state=MyDialog.close_club)
+async def process_message(message: types.Message, state: FSMContext):
+
+    async with state.proxy() as data:
+        data['text'] = message.text
+        user_message = data['text']
+
+        ans = close_club(user_message)
+
+        await MyDialog.close_club.set()
+
+        if ans:
+            await message.answer('Клуб успешно закрыт!')
+        else:
+            await message.answer('Неверно указано имя клуба!')
+
+        await message.answer('Чем вам помочь?',
+                             reply_markup=admin_main_menu_inkb)
+    await state.finish()
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
