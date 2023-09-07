@@ -14,17 +14,21 @@ to_main_menu_admin_inkb = InlineKeyboardMarkup(row_width=1, one_time_keyboard=Tr
 
 #main menu inline
 сhange_lead_button = InlineKeyboardButton(text='Сменить руководителя', url='https://my.itmo.ru/requests/new/2266')
-close_club_button = InlineKeyboardButton(text='Закрыть клуб', url='https://my.itmo.ru/requests/new/2266')
+close_club_button = InlineKeyboardButton(text='Закрыть клуб', callback_data='close_club')
 consutation_button = InlineKeyboardButton(text='Записаться на консультацию', url='https://my.itmo.ru/requests/new/2266')
 change_logo_button = InlineKeyboardButton(text='Заменить логотип клуба', url='https://my.itmo.ru/requests/new/2266')
 change_back_button = InlineKeyboardButton(text='Заменить фон клуба', url='https://my.itmo.ru/requests/new/2266')
 question_button = InlineKeyboardButton(text='Задать вопрос', callback_data='question')
-main_menu_inkb = InlineKeyboardMarkup(row_width=1, one_time_keyboard=True).add(сhange_lead_button,
-                                                                               close_club_button,
+main_menu_inkb = InlineKeyboardMarkup(row_width=1, one_time_keyboard=True).add(question_button,
                                                                                consutation_button,
                                                                                change_logo_button,
                                                                                change_back_button,
-                                                                               question_button)
+                                                                               сhange_lead_button,
+                                                                               close_club_button)
+
+close_club_url_button = InlineKeyboardButton(text='Закрыть клуб', url='https://my.itmo.ru/requests/new/2266')
+close_club_url_inkb = InlineKeyboardMarkup(row_width=1, one_time_keyboard=True).add(close_club_url_button,
+                                                                                    to_main_menu_button)
 
 change_lead_admin_button = InlineKeyboardButton(text='Сменить руководителя', callback_data='admin_change_lead')
 close_club_admin_button = InlineKeyboardButton(text='Закрыть клуб', callback_data='admin_close_club')

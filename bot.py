@@ -16,6 +16,7 @@ API_TOKEN = '6158582931:AAFa5tddFa8126OBf8Pkco9WobMvjk2v0ho'
 bot = Bot(token=API_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
+personal_user_id = 0
 
 
 @dp.message_handler(commands=['start'])
@@ -41,7 +42,7 @@ async def process_message(message: types.Message, state: FSMContext):
         await MyDialog.answer.set()
 
     await state.finish()
-    if message.from_user.id == 1067036017:
+    if message.from_user.id == 10670360170:
         role_client = 'admin'
     else:
         role_client = 'member'
@@ -49,10 +50,10 @@ async def process_message(message: types.Message, state: FSMContext):
     register_db(message.from_user.id, user_message, role_client)
 
     if role_client == "admin":
-        await message.answer('Вы удачно прошли регу',
+        await message.answer('Вы удачно прошли регистрацию',
                                      reply_markup=to_main_menu_admin_inkb)
     else:
-        await message.answer('Вы удачно прошли регу',
+        await message.answer('Вы удачно прошли регистрацию',
                                 reply_markup=to_main_menu_inkb)
 
 
@@ -69,6 +70,22 @@ async def main_menu(callback: types.CallbackQuery):
     await callback.message.edit_text('Чем вам помочь?',
                                      reply_markup=admin_main_menu_inkb)
 
+
+@dp.callback_query_handler(text='close_club')
+async def closing_club(callback: types.CallbackQuery):
+    await callback.message.delete_reply_markup()
+
+    data_of_clubs = admin_of_clubs(callback.from_user.id)
+
+    if len(data_of_clubs):
+        answer_to_user = 'Вы можете подать заявку на закрытие следующих клубов:'
+        for name in data_of_clubs:
+            answer_to_user += f'\n- {name}'
+
+        await callback.message.edit_text(answer_to_user, reply_markup=close_club_url_inkb)
+    else:
+        await callback.message.edit_text('В данный момент вы не являетесь руководителем какого-либо клуба!',
+                                         reply_markup=to_main_menu_inkb)
 
 @dp.callback_query_handler(text='question')
 async def question(callback: types.CallbackQuery):
@@ -96,7 +113,6 @@ async def question_own(callback: types.CallbackQuery):
     await callback.message.delete_reply_markup()
     await callback.message.edit_text('Напишите свой вопрос',
                                      reply_markup=to_main_menu_inkb)
-
 
 
 @dp.callback_query_handler(text='admin_change_lead')

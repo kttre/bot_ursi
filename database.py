@@ -71,3 +71,17 @@ def close_club(club_name):
             cursor.close()
             connection.commit()
         return final
+
+
+def admin_of_clubs(id_client):
+    with sqlite3.connect("Bot_ursi.db") as connection:
+        cursor = connection.cursor()
+        cursor.execute(f'SELECT idClub FROM tMemberShip WHERE idClient = {id_client} AND RoleMember = "руководитель"')
+        record = cursor.fetchall()
+        club_names = []
+        for id_club in record:
+            cursor.execute(f'SELECT NameClub FROM tClub WHERE idClub = {id_club[0]} AND OpenClub = 1')
+            club_names.append((cursor.fetchone())[0])
+        cursor.close()
+        connection.commit()
+    return club_names
