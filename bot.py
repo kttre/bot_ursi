@@ -16,20 +16,22 @@ API_TOKEN = '6158582931:AAFa5tddFa8126OBf8Pkco9WobMvjk2v0ho'
 bot = Bot(token=API_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
-personal_user_id = 0
+id_of_message = 0
 
 
 @dp.message_handler(commands=['start'])
 async def register(message: types.Message):
     await message.delete()
-    await message.answer('Привет! Это тг бот клубной системы ИТМО. Чтобы начать позьзоваться им, пройди регу',
+    await message.answer('Привет! Это тг бот клубной системы ИТМО. Чтобы начать позьзоваться им, пройди регистрацию.',
                          reply_markup=register_inkb)
 
 
 @dp.callback_query_handler(text='register')
 async def to_main_menu(callback: types.CallbackQuery):
+    global id_of_message
     await callback.message.delete_reply_markup()
-    await callback.message.answer('Введите ваш номер ИСУ')
+    await callback.message.edit_text('Введите ваш номер ИСУ')
+    id_of_message = callback.message.message_id
     await MyDialog.isu_num.set()
 
 
@@ -42,12 +44,15 @@ async def process_message(message: types.Message, state: FSMContext):
         await MyDialog.answer.set()
 
     await state.finish()
-    if message.from_user.id == 10670360170:
+    if message.from_user.id == 1067036017:
         role_client = 'admin'
     else:
         role_client = 'member'
 
     register_db(message.from_user.id, user_message, role_client)
+
+    await bot.delete_message(message.chat.id, id_of_message)
+    await message.delete()
 
     if role_client == "admin":
         await message.answer('Вы удачно прошли регистрацию',
@@ -86,6 +91,7 @@ async def closing_club(callback: types.CallbackQuery):
     else:
         await callback.message.edit_text('В данный момент вы не являетесь руководителем какого-либо клуба!',
                                          reply_markup=to_main_menu_inkb)
+
 
 @dp.callback_query_handler(text='question')
 async def question(callback: types.CallbackQuery):
