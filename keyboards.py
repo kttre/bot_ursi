@@ -39,7 +39,8 @@ admin_main_menu_inkb = InlineKeyboardMarkup(row_width=1, one_time_keyboard=True)
 #question
 question_1_button = InlineKeyboardButton(text='Вопрос 1', callback_data='question_1')
 question_2_button = InlineKeyboardButton(text='Вопрос 2', callback_data='question_2')
-own_question_button = InlineKeyboardButton(text='Задать свой вопрос', callback_data='own_question')
+#own_question_button = InlineKeyboardButton(text='Задать свой вопрос', callback_data='own_question')
+own_question_button = InlineKeyboardButton(text='Задать свой вопрос', url='https://t.me/North_Pole49')
 question_inkb = InlineKeyboardMarkup(row_width=1, one_time_keyboard=True).add(question_1_button,
                                                                               question_2_button,
                                                                               own_question_button,

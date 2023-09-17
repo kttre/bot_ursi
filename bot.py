@@ -44,7 +44,7 @@ async def process_message(message: types.Message, state: FSMContext):
         await MyDialog.answer.set()
 
     await state.finish()
-    if message.from_user.id == 1067036017:
+    if message.from_user.id == 570427565:
         role_client = 'admin'
     else:
         role_client = 'member'
@@ -113,12 +113,13 @@ async def question_2(callback: types.CallbackQuery):
     await callback.message.edit_text('Ответ 2',
                                      reply_markup=to_main_menu_inkb)
 
-
+"""
 @dp.callback_query_handler(text='own_question')
 async def question_own(callback: types.CallbackQuery):
     await callback.message.delete_reply_markup()
     await callback.message.edit_text('Напишите свой вопрос',
                                      reply_markup=to_main_menu_inkb)
+"""
 
 
 @dp.callback_query_handler(text='admin_change_lead')
